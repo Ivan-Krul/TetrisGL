@@ -4,12 +4,16 @@
 #include <string>
 #include "Defines.h"
 #include "Painter.h"
+#include "Tetris.h"
 
 #pragma comment(lib, "opengl32.lib")
 
 Painter painter;
+Tetris tetris;
 
 void Init() {
+	srand(time(NULL));
+	tetris.BlockAppeard();
 }
 
 void Paint() {
@@ -103,8 +107,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 				glClearColor(0, 0, 0, 0.0f);
 				glClear(GL_COLOR_BUFFER_BIT);
 
-				Paint();
-				painter.Paint();
+				tetris.Move();
+				tetris.WriteBlock();
+				painter.Paint(tetris.map);
 
 				SwapBuffers(hDC);
 

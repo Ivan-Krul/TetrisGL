@@ -10,28 +10,32 @@ private:
 	uint32_t frames = 0;
 public: 
 	static const uint16_t cFrequency = 30;
-	vec3ub colorAir;
-	vec3ub colorCurrentBlock;
-	vec3ub colorPlacedBlock;
+	enum Pallette : int {
+		Black = 0x0f0f0f,
+		White = 0xfcfcfc,
+		Blue = 0x2038ec,
+		Red = 0xd82800,
+		Lime = 0x80d010,
+		Green = 0x00a800,
+		Marble = 0xdb00cc,
+		Grey = 0x303030,
+	}currentPallette;
+	/////////////////////////////////////////
+private:
+	void ChangeColor() {
+		switch (rand() % 6) {
+		case 0:currentPallette = White;break;
+		case 1:currentPallette = Blue;break;
+		case 2:currentPallette = Red;break;
+		case 3:currentPallette = Lime;break;
+		case 4:currentPallette = Green;break;
+		case 5:currentPallette = Marble;break;
+		}
+	}
 public:
 	Painter() {
-		int air = 0x0f0f0f;
-
-		colorAir.x = air / 256 / 256;
-		colorAir.y = air / 256 % 256;
-		colorAir.z = air % 256;
-
-		int cur_block = 0x919191;
-
-		colorCurrentBlock.x = cur_block / 256 / 256;
-		colorCurrentBlock.y = cur_block / 256 % 256;
-		colorCurrentBlock.z = cur_block % 256;
-
-		int placed_block = 0x303030;
-
-		colorPlacedBlock.x = placed_block;
-		colorPlacedBlock.y = placed_block / 256 % 256;
-		colorPlacedBlock.z = placed_block % 256;
+		srand(time(NULL));
+		ChangeColor();
 	}
 private: 
 	void Flip() { 
@@ -44,18 +48,20 @@ private:
 		int block;
 
 		switch (type_block) {
-		case Air: block = (colorAir.x * 256 * 256) + (colorAir.y * 256) + colorAir.z; break;
-		case CurrentBlock: block = (colorCurrentBlock.x * 256 * 256) + (colorCurrentBlock.y * 256) + colorCurrentBlock.z; break;
-		case PlacedBlock: block = (colorPlacedBlock.x * 256 * 256) + (colorPlacedBlock.y * 256) + colorPlacedBlock.z; break;
+		case Air: block = Black; break;
+		case CurrentBlock: block = currentPallette; break;
+		case PlacedBlock: block = Grey; break;
 		}
+
+		int delta = 20;
 
 		glColor3f(float(block / 256 / 256) / 256.0f, float(block / 256 % 256) / 256.0f, float(block % 256) / 256.0f);
 		glVertex2f(0.0f, 0.0f);
 
-		glColor3f(float(block / 256 / 256 - 30) / 256.0f, float(block / 256 % 256 - 30) / 256.0f, float(block % 256 - 30) / 256.0f);
+		glColor3f(float(block / 256 / 256 - delta) / 256.0f, float(block / 256 % 256 - delta) / 256.0f, float(block % 256 - delta) / 256.0f);
 		glVertex2f(1.0f, 0.0f);
 
-		glColor3f(float(block / 256 / 256 + 30) / 256.0f, float(block / 256 % 256 + 30) / 256.0f, float(block % 256 + 30) / 256.0f);
+		glColor3f(float(block / 256 / 256 + delta) / 256.0f, float(block / 256 % 256 + delta) / 256.0f, float(block % 256 + delta) / 256.0f);
 		glVertex2f(0.0f, 1.0f);
 
 		glColor3f(float(block / 256 / 256) / 256.0f, float(block / 256 % 256) / 256.0f, float(block % 256) / 256.0f);
@@ -64,11 +70,22 @@ private:
 	}
 public: 
 	uint32_t getFrames() { return frames; }
-	void Paint() {
+	void Paint(typeBlock map[MAP_X][MAP_Y]) {
 		glLoadIdentity();
 		glTranslatef(-1.0f, -1.0f, 0.0f);
 		glScalef(2.0f / MAP_X,2.0f / MAP_Y,0.0f);
-		DrawBlock(Air);
+		for (int i=0;i < MAP_X;i++) {
+			for (int j = 0;j < MAP_Y;j++) {
+				glPushMatrix();
+				glTranslatef(i, j, 0.0f);
+
+				DrawBlock(map[i][j]);
+
+				glPopMatrix();
+			}
+		}
+
+		Flip();
 	}
 };
 

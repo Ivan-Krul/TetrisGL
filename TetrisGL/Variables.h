@@ -132,3 +132,13 @@ static enum typeBlock {
 	CurrentBlock,
 	PlacedBlock
 };
+
+double pow(double x, double k) {
+	double a = 1;
+	for (int i = 0;i < k;i++) a *= x;
+	return a;
+}
+
+bool IsInMap(int x, int y) {
+	return (0 <= x) && (x < MAP_X) && (0 <= y) && (y < MAP_Y);
+}
