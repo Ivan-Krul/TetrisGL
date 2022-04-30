@@ -18,21 +18,43 @@ public:
 		Lime = 0x80d010,
 		Green = 0x00a800,
 		Marble = 0xdb00cc,
-		Grey = 0x303030,
+		Grey = 0x7f7f7f,
+		LightBlue = 0x3ebeff,
+		LightGreen = 0x58f898,
+		Magmatic = 0xf83800,
+		Sea = 0x6b88ff,
+		Pink = 0xf878f8,
+		DarkRed = 0xab0023,
+		Purple = 0x6b47ff,
+		LightClay = 0x6b47ff,
+		Raspberry = 0xe7005b,
+		Orange = 0xe7005b,
+		LavaRed = 0xf83800,
 	}currentPallette;
 	/////////////////////////////////////////
-private:
+public:
 	void ChangeColor() {
-		switch (rand() % 6) {
+		switch (rand() % 17) {
 		case 0:currentPallette = White;break;
 		case 1:currentPallette = Blue;break;
 		case 2:currentPallette = Red;break;
 		case 3:currentPallette = Lime;break;
 		case 4:currentPallette = Green;break;
 		case 5:currentPallette = Marble;break;
+		case 6:currentPallette = LightBlue;break;
+		case 7:currentPallette = LightGreen;break;
+		case 8:currentPallette = Magmatic;break;
+		case 9:currentPallette = Sea;break;
+		case 10:currentPallette = Pink;break;
+		case 11:currentPallette = DarkRed;break;
+		case 12:currentPallette = Purple;break;
+		case 13:currentPallette = LightClay;break;
+		case 14:currentPallette = Raspberry;break;
+		case 15:currentPallette = Orange;break;
+		case 16:currentPallette = LavaRed;break;
 		}
 	}
-public:
+
 	Painter() {
 		srand(time(NULL));
 		ChangeColor();

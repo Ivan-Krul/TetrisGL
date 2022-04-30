@@ -8,12 +8,9 @@
 
 #pragma comment(lib, "opengl32.lib")
 
-Painter painter;
 Tetris tetris;
 
 void Init() {
-	srand(time(NULL));
-	tetris.BlockAppeard();
 }
 
 void Paint() {
@@ -99,7 +96,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		{
 
 
-			if (GetAsyncKeyState(' ')) { is_pause = !is_pause; Sleep(1000.0 / 30.0); }
+			if (GetAsyncKeyState(' ')) { is_pause = !is_pause; Sleep(3000.0 / 30.0); }
+			if (GetAsyncKeyState(VK_F6)) { tetris.BlockAppeard(); Sleep(3000.0 / 30.0); }
 
 			/* OpenGL animation code goes here */
 			if (!is_pause) {
@@ -107,9 +105,11 @@ int WINAPI WinMain(HINSTANCE hInstance,
 				glClearColor(0, 0, 0, 0.0f);
 				glClear(GL_COLOR_BUFFER_BIT);
 
-				tetris.Move();
-				tetris.WriteBlock();
-				painter.Paint(tetris.map);
+				if (tetris.isWork()) {
+					tetris.Move();
+					tetris.CheckLines();
+					tetris.WriteBlock();
+				}
 
 				SwapBuffers(hDC);
 
