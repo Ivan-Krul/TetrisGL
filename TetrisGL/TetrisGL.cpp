@@ -9,6 +9,8 @@
 #pragma comment(lib, "opengl32.lib")
 
 Tetris tetris;
+bool NeedSaveResult = false;
+bool IsSavedResult = false;
 
 void Init() {
 }
@@ -98,6 +100,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 			if (GetAsyncKeyState(' ')) { is_pause = !is_pause; Sleep(3000.0 / 30.0); }
 			if (GetAsyncKeyState(VK_F6)) { tetris.BlockAppeard(); Sleep(3000.0 / 30.0); }
+			if (GetAsyncKeyState(VK_F4)) { tetris.Start(); Sleep(3000.0 / 30.0); }
+			if (GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState('S')) { tetris.Failure(); }
 
 			/* OpenGL animation code goes here */
 			if (!is_pause) {
@@ -108,8 +112,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 				if (tetris.isWork()) {
 					tetris.Move();
 					tetris.CheckLines();
-					tetris.WriteBlock();
 				}
+					tetris.WriteBlock();
+
 
 				SwapBuffers(hDC);
 

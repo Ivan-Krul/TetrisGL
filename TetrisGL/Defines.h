@@ -1,5 +1,5 @@
 #pragma once
-#define WINDOW_X 450
+#define WINDOW_X 600
 #define WINDOW_Y 900
 
 #define MAP_X 10

@@ -4,6 +4,7 @@
 #include "Painter.h"
 #include <iostream>
 #include <Windows.h>
+#include <fstream>
 
 class Block {
 private:
@@ -85,9 +86,18 @@ public:
 				}
 			}
 		}
+		bool isFalsing = false;
 		for (int i = 0;i < 4;i++) {
 			for (int j = 0;j < 4;j++) {
-				structure[i][j] = buffer[i][j];
+				if (buffer[i][j] == CurrentBlock && !IsInMap(pos.x + i, pos.y + j))
+					isFalsing = true;
+			}
+		}
+		if (!isFalsing) {
+			for (int i = 0;i < 4;i++) {
+				for (int j = 0;j < 4;j++) {
+					structure[i][j] = buffer[i][j];
+				}
 			}
 		}
 	}
@@ -143,8 +153,11 @@ private:
 	Painter painter;
 	typeBlock map[MAP_X][MAP_Y];
 	uint8_t stepsToFall;
+	int score;
+	bool isSaved = false;
 
 	void Place() {
+		Beep(400, 200);
 		vec2i pos = block.getPosition();
 
 		for (int i = 0;i < 4;i++) {
@@ -156,19 +169,21 @@ private:
 
 			}
 		}
-
 		BlockAppeard();
 	}
 public:
 	void Start() {
+		Beep(800, 200);
 		for (int i = 0;i < MAP_X;i++) {
 			for (int j = 0;j < MAP_Y;j++) {
 				map[i][j] = Air;
 			}
 		}
 
+		isSaved = false;
 		block.BlockAppeard();
 		stepsToFall = 0;
+		score = 0;
 	}
 
 	Tetris() {
@@ -176,6 +191,7 @@ public:
 	}
 
 	void BlockAppeard() {
+		Beep(500, 200);
 		block.BlockAppeard();
 		painter.ChangeColor();
 	}
@@ -183,23 +199,45 @@ public:
 	void Move() {
 		int Y = block.getPosition().y;
 		bool isMove = true;
+		bool isClicked = false;
 
-		if (GetAsyncKeyState(VK_NUMPAD2))
-			if(!block.Move(true, false, map)) isMove = false;
-		else if (GetAsyncKeyState(VK_NUMPAD6))
-			if (!block.Move(false, true, map)) isMove = false;
-		else if (GetAsyncKeyState(VK_NUMPAD4))
-			if (!block.Move(false, false, map)) isMove = false;
-		else if (GetAsyncKeyState(VK_NUMPAD9))
+		if (GetAsyncKeyState(VK_NUMPAD2)){
+			bool a = block.Move(true, false, map);
+			if(!a)
+				isMove = false;
+			isClicked = true;
+		}
+		else if (GetAsyncKeyState(VK_NUMPAD6)){
+			bool a = block.Move(false, true, map);
+			if (!a)
+				isMove = false;
+			isClicked = true;
+		}
+		else if (GetAsyncKeyState(VK_NUMPAD4)){
+			bool a = block.Move(false, false, map);
+			if (!a)
+				isMove = false;
+			isClicked = true;
+		}
+		else if (GetAsyncKeyState(VK_NUMPAD9)){
 			block.Rotate(true);
-		else if (GetAsyncKeyState(VK_NUMPAD7))
+			isClicked = true;
+		}
+		else if (GetAsyncKeyState(VK_NUMPAD7)) {
 			block.Rotate(false);
+			isClicked = true;
+		}
+
+		//if(isClicked) Beep(300, 50);
 
 		if (block.getPosition().y != block.getPosition().y)
 			stepsToFall = 0;
 
 		if (stepsToFall > painter.cFrequency) {
-			if (!block.Move(true, false, map)) isMove = false;
+			bool a = block.Move(true, false, map);
+			if (!a){
+				isMove = false;
+			}
 			stepsToFall = 0;
 		}
 
@@ -207,6 +245,7 @@ public:
 	}
 
 	void CheckLines() {
+		int P = 0;
 		for (int i = MAP_Y - 1;i >= 0;i--) {
 			int C = 0;
 
@@ -216,6 +255,8 @@ public:
 			}
 
 			if (C == MAP_X) {
+				P++;
+				Beep(500+(100 * P), 300);
 				for (int q = i+1;q < MAP_Y;q++) {
 					for (int j = 0;j < MAP_X;j++) {
 						map[j][q - 1] = map[j][q];
@@ -223,40 +264,76 @@ public:
 				}
 			}
 		}
+		if (P == 4) score += 22800;
+		else score += 760 * P;
 	}
 	bool isWork() {
 		for (int j = 0;j < MAP_X;j++) {
-			if (map[j][19] == PlacedBlock)
+			if (map[j][19] == PlacedBlock) {
+				Beep(200, 300);
+				if (!isSaved){
+					Failure();
+					isSaved = true;
+				}
 				return false;
+			}
 		}
 		return true;
 	}
 
+	void Failure() {
+		Beep(1000, 1000);
+		std::ofstream file;
+		std::ifstream indexer("Count.txt");
+		file.open("Records.txt",std::ios::app);
+		int ind;
+		indexer >> ind;
+		indexer.close();
+		std::ofstream indexe("Count.txt");
+		indexe.clear();
+		indexe << ind + 1;
+		indexe.close();
+		file << ind << " : " << score<<"\n";
+		file.close();
+	}
+
+	int getScore() {
+		return score;
+	}
+
 	void WriteBlock() {
-		vec2i pos = block.getPosition();
+			typeBlock buffer[MAP_X][MAP_Y];
+			vec2i pos = block.getPosition();
 
-		for (int i = 0;i < MAP_X;i++) {
-			for (int j = 0;j < MAP_Y;j++) {
+			for (int i = 0;i < MAP_X;i++) {
+				for (int j = 0;j < MAP_Y;j++) {
+					buffer[i][j] = map[i][j];
+					if (map[i][j] == CurrentBlock) {
+						map[i][j] = Air;
+					}
 
-				if (map[i][j] == CurrentBlock) {
-					map[i][j] = Air;
 				}
-
 			}
-		}
 
-		for (int i = 0;i < 4;i++) {
-			for (int j = 0;j < 4;j++) {
+			for (int i = 0;i < 4;i++) {
+				for (int j = 0;j < 4;j++) {
 
-				if (block.getStructure(i, j) == CurrentBlock && IsInMap(pos.x+i,pos.y+j)) {
-					map[pos.x + i][pos.y + j] = CurrentBlock;
+					if (block.getStructure(i, j) == CurrentBlock && IsInMap(pos.x + i, pos.y + j)) {
+						map[pos.x + i][pos.y + j] = CurrentBlock;
+					}
+
 				}
-
 			}
-		}
 
-		painter.Paint(map);
-		stepsToFall++;
+			painter.Paint(map, score);
+
+			for (int i = 0;i < MAP_X;i++) {
+				for (int j = 0;j < MAP_Y;j++) {
+					map[i][j] = buffer[i][j];
+				}
+			}
+
+			stepsToFall++;
 	}
 };
 
