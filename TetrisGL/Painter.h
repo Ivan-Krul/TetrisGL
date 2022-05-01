@@ -61,7 +61,7 @@ public:
 	}
 private: 
 	void Flip() { 
-		Sleep(1000.0 / cFrequency);
+		Sleep(1000.0 / (cFrequency));
 		frames++;
 	}
 
@@ -100,17 +100,17 @@ private:
 		glLineWidth(3);
 		glBegin(GL_LINES);
 		glColor3f(1.0f, 0.0f, 0.0f);
-		if (num == 0 || num == 4 || num == 5 || num == 6 || num == 8 || num == 9) line(0.15, 0.85, 0.15, 0.5);
-		if (num == 0 || num == 2 || num == 6 || num == 8) line(0.15, 0.5, 0.15, 0.15);
+		if (num == 0 || num == 4 || num == 5 || num == 6 || num == 8 || num == 9 || num == int('L') || num == int('V')) line(0.15, 0.85, 0.15, 0.5);
+		if (num == 0 || num == 2 || num == 6 || num == 8 || num == int('L')) line(0.15, 0.5, 0.15, 0.15);
 		if (num == 0 || num == 2 || num == 3 || num == 5 || num == 6 || num == 7 || num == 8 || num == 9) line(0.15, 0.85, 0.85, 0.85);
 		if (num == 2 || num == 3 || num == 4 || num == 5 || num == 6 || num == 8 || num == 9) line(0.15, 0.5, 0.85, 0.5);
-		if (num == 0 || num == 2 || num == 3 || num == 5 || num == 6 || num == 8 || num == 9) line(0.15, 0.15, 0.85, 0.15);
-		if (num == 0 || num == 1 || num == 3 || num == 2 || num == 4 || num == 7 || num == 8 || num == 9) line(0.85, 0.5, 0.85, 0.85);
-		if (num == 0 || num == 1 || num == 3 || num == 4 || num == 5 || num == 6 || num == 7 || num == 8 || num == 9) line(0.85, 0.5, 0.85, 0.15);
+		if (num == 0 || num == 2 || num == 3 || num == 5 || num == 6 || num == 8 || num == 9 || num == int('L') || num == int('V')) line(0.15, 0.15, 0.85, 0.15);
+		if (num == 0 || num == 1 || num == 3 || num == 2 || num == 4 || num == 7 || num == 8 || num == 9 || num == int('V')) line(0.85, 0.5, 0.85, 0.85);
+		if (num == 0 || num == 1 || num == 3 || num == 4 || num == 5 || num == 6 || num == 7 || num == 8 || num == 9 || num == int('V')) line(0.85, 0.5, 0.85, 0.15);
 		glEnd();
 	}
 
-	void DrawInterface(int score){ 
+	void DrawInterface(int score,int lv){ 
 		int block;
 
 		block = currentPallette;
@@ -128,10 +128,35 @@ private:
 			s++;
 			score /= 10;
 		}
+
+		glPushMatrix();
+		glTranslatef(11, 10, 0.0f);
+		glScalef(0.5f, 1.0f, 0.0f);
+		ShowNumber('L');
+		glEnd();
+		glPopMatrix();
+		glPushMatrix();
+		glTranslatef(11.5, 10, 0.0f);
+		glScalef(0.5f, 1.0f, 0.0f);
+		ShowNumber('V');
+		glEnd();
+		glPopMatrix();
+
+		s = 0;
+		while (lv != 0) {
+			glPushMatrix();
+			glTranslatef(13 - (s * 0.5), 10, 0.0f);
+			glScalef(0.5f, 1.0f, 0.0f);
+			ShowNumber(lv % 10);
+			glEnd();
+			glPopMatrix();
+			s++;
+			lv /= 10;
+		}
 	}
 public: 
 	uint32_t getFrames() { return frames; }
-	void Paint(typeBlock map[MAP_X][MAP_Y],int score) {
+	void Paint(typeBlock map[MAP_X][MAP_Y],int score, int lv) {
 		glLoadIdentity();
 		glTranslatef(-1.0f, -1.0f, 0.0f);
 		glScalef(2.0f / (MAP_X*(3.0/2.0)),2.0f / MAP_Y,0.0f);
@@ -146,7 +171,7 @@ public:
 			}
 		}
 
-		DrawInterface(score);
+		DrawInterface(score, lv);
 
 		Flip();
 	}

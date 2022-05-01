@@ -155,6 +155,7 @@ private:
 	uint8_t stepsToFall;
 	int score;
 	bool isSaved = false;
+	double LV = 1;
 
 	void Place() {
 		Beep(400, 200);
@@ -233,7 +234,7 @@ public:
 		if (block.getPosition().y != block.getPosition().y)
 			stepsToFall = 0;
 
-		if (stepsToFall > painter.cFrequency) {
+		if (stepsToFall > painter.cFrequency*2) {
 			bool a = block.Move(true, false, map);
 			if (!a){
 				isMove = false;
@@ -256,6 +257,7 @@ public:
 
 			if (C == MAP_X) {
 				P++;
+				LV += 0.1;
 				Beep(500+(100 * P), 300);
 				for (int q = i+1;q < MAP_Y;q++) {
 					for (int j = 0;j < MAP_X;j++) {
@@ -325,7 +327,7 @@ public:
 				}
 			}
 
-			painter.Paint(map, score);
+			painter.Paint(map, score, LV);
 
 			for (int i = 0;i < MAP_X;i++) {
 				for (int j = 0;j < MAP_Y;j++) {
@@ -333,7 +335,8 @@ public:
 				}
 			}
 
-			stepsToFall++;
+
+			stepsToFall += LV ;
 	}
 };
 
