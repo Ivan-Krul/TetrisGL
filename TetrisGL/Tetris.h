@@ -286,7 +286,7 @@ public:
 		std::ofstream file;
 		std::ifstream indexer("Count.txt");
 		file.open("Records.txt",std::ios::app);
-		int ind;
+		int ind = 0;
 		indexer >> ind;
 		indexer.close();
 		std::ofstream indexe("Count.txt");
