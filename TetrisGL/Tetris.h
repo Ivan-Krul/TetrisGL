@@ -2,167 +2,29 @@
 #include "Variables.h"
 #include "Defines.h"
 #include "Painter.h"
+#include "Block.h"
 #include <iostream>
 #include <Windows.h>
 #include <fstream>
 
-class Block {
-private:
-	vec2i pos;
-	typeBlock structure[4][4];
-
-	enum atlas : unsigned short {
-		L =		0b0000010001000110,
-		I =		0b0100010001000100,
-		Z =		0b0000010001100010,
-		S =		0b0000001001100100,
-		O =		0b0000011001100000,
-		J =		0b0000001000100110,
-		T =		0b0000010001100100,
-	};
-public:
-	void BlockAppeard() {
-		unsigned short scheme = 0;
-		int ran = rand() % 7;
-
-		switch (ran){
-		case 0:
-			scheme = I;
-			break;
-		case 1:
-			scheme = L;
-			break;
-		case 2:
-			scheme = Z;
-			break;
-		case 3:
-			scheme = S;
-			break;
-		case 4:
-			scheme = O;
-			break;
-		case 5:
-			scheme = J;
-			break;
-		case 6:
-			scheme = T;
-			break;
-		default:
-			scheme = T;
-			break;
-		}
-
-		for (int i = 0;i < 16;i++) {
-
-			if (scheme % 2 == 1)
-				structure[i % 4][i / 4] = CurrentBlock;
-			else 
-				structure[i % 4][i / 4] = PlacedBlock;
-			scheme /= 2;
-
-		}
-
-		pos.x = 4;
-		pos.y = 16;
-	}
-
-	Block() {
-		BlockAppeard();
-	}
-
-	void Rotate(bool isTurnRight) {
-		typeBlock buffer[4][4];
-		if (isTurnRight) {
-			for (int i = 0;i < 4;i++) {
-				for (int j = 0;j < 4;j++) {
-					buffer[i][j] = structure[j][3-i];
-				}
-			}
-		}
-		else {
-			for (int i = 0;i < 4;i++) {
-				for (int j = 0;j < 4;j++) {
-					buffer[i][j] = structure[3-j][i];
-				}
-			}
-		}
-		bool isFalsing = false;
-		for (int i = 0;i < 4;i++) {
-			for (int j = 0;j < 4;j++) {
-				if (buffer[i][j] == CurrentBlock && !IsInMap(pos.x + i, pos.y + j))
-					isFalsing = true;
-			}
-		}
-		if (!isFalsing) {
-			for (int i = 0;i < 4;i++) {
-				for (int j = 0;j < 4;j++) {
-					structure[i][j] = buffer[i][j];
-				}
-			}
-		}
-	}
-
-	bool Move(bool isDown, bool isRight, typeBlock map[MAP_X][MAP_Y]) {
-		if (isDown) pos.y--;
-		else if (isRight) pos.x++;
-		else pos.x--;
-
-		for (int i = 0;i < 4;i++) {
-			for (int j = 0;j < 4;j++) {
-
-				if ((!IsInMap(i + pos.x, j + pos.y)&& structure[i][j] == CurrentBlock) || (map[i + pos.x][pos.y + j] == PlacedBlock && structure[i][j] == CurrentBlock)) {
-
-					if (isDown) pos.y++;
-					else if (isRight) pos.x--;
-					else pos.x++;
-
-					return isCanMove(map);
-				}
-
-			}
-		}
-		return true;
-	}
-
-	bool isCanMove(typeBlock map[MAP_X][MAP_Y]) {
-		for (int i = 0;i < 4;i++) {
-			for (int j = 0;j < 4;j++) {
-
-				if ((pos.y + j == 0 && structure[i][j] == CurrentBlock )|| (map[i+pos.x][pos.y + j - 1] == PlacedBlock && structure[i][j] == CurrentBlock) ) {
-					return false;
-				}
-
-			}
-		}
-		return true;
-	}
-
-	vec2i getPosition() {
-		return pos;
-	}
-
-	typeBlock getStructure(int x, int y) {
-		return structure[x % 4][y % 4];
-	}
-};
-
-
 class Tetris {
 private:
-	Block block;
+	Block block, nextBlock;
 	Painter painter;
 	typeBlock map[MAP_X][MAP_Y];
 	uint8_t stepsToFall;
 	int score;
 	bool isSaved = false;
 	double LV = 1;
+	const int cPositionNextBlockX = 11;
+	const int cPositionNextBlockY = 12;
 
 	void Place() {
 		Beep(400, 200);
 		vec2i pos = block.getPosition();
 
-		for (int i = 0;i < 4;i++) {
-			for (int j = 0;j < 4;j++) {
+		for (int i = 0;i < block.sizeCol();i++) {
+			for (int j = 0;j < block.sizeCol();j++) {
 
 				if (block.getStructure(i, j) == CurrentBlock && IsInMap(pos.x + i, pos.y + j)) {
 					map[pos.x + i][pos.y + j] = PlacedBlock;
@@ -183,8 +45,11 @@ public:
 
 		isSaved = false;
 		block.BlockAppeard();
+		nextBlock.BlockAppeard();
+		nextBlock.setPosition(cPositionNextBlockX, cPositionNextBlockY);
 		stepsToFall = 0;
 		score = 0;
+		LV = 1;
 	}
 
 	Tetris() {
@@ -193,8 +58,9 @@ public:
 
 	void BlockAppeard() {
 		Beep(500, 200);
-		block.BlockAppeard();
-		painter.ChangeColor();
+		block.Rewrite(nextBlock);
+		nextBlock.BlockAppeard();
+		nextBlock.setPosition(cPositionNextBlockX, cPositionNextBlockY);
 	}
 
 	void Move() {
@@ -221,11 +87,11 @@ public:
 			isClicked = true;
 		}
 		else if (GetAsyncKeyState(VK_NUMPAD9)){
-			block.Rotate(true);
+			block.Rotate(true,map);
 			isClicked = true;
 		}
 		else if (GetAsyncKeyState(VK_NUMPAD7)) {
-			block.Rotate(false);
+			block.Rotate(false, map);
 			isClicked = true;
 		}
 
@@ -257,7 +123,7 @@ public:
 
 			if (C == MAP_X) {
 				P++;
-				LV += 0.1;
+				LV += 0.125;
 				Beep(500+(100 * P), 300);
 				for (int q = i+1;q < MAP_Y;q++) {
 					for (int j = 0;j < MAP_X;j++) {
@@ -271,7 +137,7 @@ public:
 	}
 	bool isWork() {
 		for (int j = 0;j < MAP_X;j++) {
-			if (map[j][19] == PlacedBlock) {
+			if (map[j][18] == PlacedBlock) {
 				Beep(200, 300);
 				if (!isSaved){
 					Failure();
@@ -304,39 +170,39 @@ public:
 	}
 
 	void WriteBlock() {
-			typeBlock buffer[MAP_X][MAP_Y];
-			vec2i pos = block.getPosition();
+		typeBlock buffer[MAP_X][MAP_Y];
+		vec2i pos = block.getPosition();
 
-			for (int i = 0;i < MAP_X;i++) {
-				for (int j = 0;j < MAP_Y;j++) {
-					buffer[i][j] = map[i][j];
-					if (map[i][j] == CurrentBlock) {
-						map[i][j] = Air;
-					}
-
+		for (int i = 0;i < MAP_X;i++) {
+			for (int j = 0;j < MAP_Y;j++) {
+				buffer[i][j] = map[i][j];
+				if (map[i][j] == CurrentBlock) {
+					map[i][j] = Air;
 				}
+
 			}
+		}
 
-			for (int i = 0;i < 4;i++) {
-				for (int j = 0;j < 4;j++) {
+		for (int i = 0;i < block.sizeCol();i++) {
+			for (int j = 0;j < block.sizeCol();j++) {
 
-					if (block.getStructure(i, j) == CurrentBlock && IsInMap(pos.x + i, pos.y + j)) {
-						map[pos.x + i][pos.y + j] = CurrentBlock;
-					}
-
+				if (block.getStructure(i, j) == CurrentBlock && IsInMap(pos.x + i, pos.y + j)) {
+					map[pos.x + i][pos.y + j] = CurrentBlock;
 				}
+
 			}
+		}
 
-			painter.Paint(map, score, LV);
+		painter.Paint(map, score, LV,block.getColor(),nextBlock);
 
-			for (int i = 0;i < MAP_X;i++) {
-				for (int j = 0;j < MAP_Y;j++) {
-					map[i][j] = buffer[i][j];
-				}
+		for (int i = 0;i < MAP_X;i++) {
+			for (int j = 0;j < MAP_Y;j++) {
+				map[i][j] = buffer[i][j];
 			}
+		}
 
 
-			stepsToFall += LV ;
+		stepsToFall += LV ;
 	}
 };
 

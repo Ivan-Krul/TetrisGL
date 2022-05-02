@@ -1,6 +1,7 @@
 #pragma once
-#include <gl/GL.h>
 #include "Variables.h"
+#include "Block.h"
+#include <gl/GL.h>
 #include <Windows.h>
 
 #pragma comment(lib, "opengl32.lib")
@@ -10,54 +11,10 @@ private:
 	uint32_t frames = 0;
 public: 
 	static const uint16_t cFrequency = 30;
-	enum Pallette : int {
-		Black = 0x0f0f0f,
-		White = 0xfcfcfc,
-		Blue = 0x2038ec,
-		Red = 0xd82800,
-		Lime = 0x80d010,
-		Green = 0x00a800,
-		Marble = 0xdb00cc,
-		Grey = 0x7f7f7f,
-		LightBlue = 0x3ebeff,
-		LightGreen = 0x58f898,
-		Magmatic = 0xf83800,
-		Sea = 0x6b88ff,
-		Pink = 0xf878f8,
-		DarkRed = 0xab0023,
-		Purple = 0x6b47ff,
-		LightClay = 0x6b47ff,
-		Raspberry = 0xe7005b,
-		Orange = 0xe7005b,
-		LavaRed = 0xf83800,
-	}currentPallette;
 	/////////////////////////////////////////
 public:
-	void ChangeColor() {
-		switch (rand() % 17) {
-		case 0:currentPallette = White;break;
-		case 1:currentPallette = Blue;break;
-		case 2:currentPallette = Red;break;
-		case 3:currentPallette = Lime;break;
-		case 4:currentPallette = Green;break;
-		case 5:currentPallette = Marble;break;
-		case 6:currentPallette = LightBlue;break;
-		case 7:currentPallette = LightGreen;break;
-		case 8:currentPallette = Magmatic;break;
-		case 9:currentPallette = Sea;break;
-		case 10:currentPallette = Pink;break;
-		case 11:currentPallette = DarkRed;break;
-		case 12:currentPallette = Purple;break;
-		case 13:currentPallette = LightClay;break;
-		case 14:currentPallette = Raspberry;break;
-		case 15:currentPallette = Orange;break;
-		case 16:currentPallette = LavaRed;break;
-		}
-	}
-
 	Painter() {
 		srand(time(NULL));
-		ChangeColor();
 	}
 private: 
 	void Flip() { 
@@ -65,13 +22,13 @@ private:
 		frames++;
 	}
 
-	void DrawBlock(typeBlock type_block) {
+	void DrawBlock(typeBlock type_block,Pallette pallette) {
 		glBegin(GL_TRIANGLE_STRIP);
 		int block;
 
 		switch (type_block) {
 		case Air: block = Black; break;
-		case CurrentBlock: block = currentPallette; break;
+		case CurrentBlock: block = pallette; break;
 		case PlacedBlock: block = Grey; break;
 		}
 
@@ -110,10 +67,10 @@ private:
 		glEnd();
 	}
 
-	void DrawInterface(int score,int lv){ 
+	void DrawInterface(int score,int lv, Pallette pallette, Block nextBlock){
 		int block;
 
-		block = currentPallette;
+		block = pallette;
 
 		int delta = 20;
 
@@ -153,10 +110,23 @@ private:
 			s++;
 			lv /= 10;
 		}
+
+		vec2i pos = nextBlock.getPosition();
+		for (int i = 0;i < nextBlock.sizeCol();i++) {
+			for (int j = 0;j < nextBlock.sizeCol();j++) {
+				glPushMatrix();
+				glTranslatef(i + pos.x, j + pos.y, 0.0f);
+
+				if (nextBlock.getStructure(i, j) == CurrentBlock)
+					DrawBlock(CurrentBlock, nextBlock.getColor());
+
+				glPopMatrix();
+			}
+		}
 	}
 public: 
 	uint32_t getFrames() { return frames; }
-	void Paint(typeBlock map[MAP_X][MAP_Y],int score, int lv) {
+	void Paint(typeBlock map[MAP_X][MAP_Y],int score, int lv, Pallette pallette, Block nextBlock) {
 		glLoadIdentity();
 		glTranslatef(-1.0f, -1.0f, 0.0f);
 		glScalef(2.0f / (MAP_X*(3.0/2.0)),2.0f / MAP_Y,0.0f);
@@ -165,13 +135,13 @@ public:
 				glPushMatrix();
 				glTranslatef(i, j, 0.0f);
 
-				DrawBlock(map[i][j]);
+				DrawBlock(map[i][j],pallette);
 
 				glPopMatrix();
 			}
 		}
 
-		DrawInterface(score, lv);
+		DrawInterface(score, lv, pallette,nextBlock);
 
 		Flip();
 	}

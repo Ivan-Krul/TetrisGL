@@ -100,6 +100,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 			if (GetAsyncKeyState(' ')) { is_pause = !is_pause; Sleep(3000.0 / 30.0); }
 			if (GetAsyncKeyState(VK_F6)) { tetris.BlockAppeard(); Sleep(3000.0 / 30.0); }
+			if (GetAsyncKeyState(VK_F5)) { 
+				Sleep(3000.0 / 30.0);
+			}
 			if (GetAsyncKeyState(VK_F4)) { tetris.Start(); Sleep(3000.0 / 30.0); }
 			if (GetAsyncKeyState(VK_CONTROL) && GetAsyncKeyState('S')) { tetris.Failure(); }
 
